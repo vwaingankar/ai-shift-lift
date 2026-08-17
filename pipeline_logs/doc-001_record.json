@@ -1,0 +1,29 @@
+{
+  "document_id": "doc-001",
+  "timestamp": "2026-08-17T11:51:59.880580",
+  "raw_text_char_count": 2181,
+  "phase1_output": {
+    "customer_name": "Mr. Ranjeet Sharma",
+    "customer_address": "123, Green Park Extension, Sector 15, Gurugram, Haryana - 122001",
+    "proposal_number": "PROP/2026/98765",
+    "policy_name": "OneHealth Premium Plus",
+    "plan": "1A + 2C",
+    "premium_amount": "25499",
+    "letter_date": "31-03-2026",
+    "modification_reason": "Higher deductible, considering elevated diastolic values"
+  },
+  "phase2_output": {
+    "name": "Mr. Ranjeet Sharma",
+    "address": "123, Green Park Extension, Sector 15, Gurugram, Haryana - 122001",
+    "proposal_number": "PROP/2026/98765",
+    "policy_plan": "OneHealth Premium Plus 1A + 2C",
+    "premium_value": "25499",
+    "date": "31-03-2026",
+    "modification_note": "Higher deductible, considering elevated diastolic values"
+  },
+  "confidence": "low",
+  "issues": [
+    "2 value(s) from Phase 1 do not appear in Phase 2 output verbatim - possible rewording or data loss: {'OneHealth Premium Plus', '1A + 2C'}"
+  ],
+  "output_pdf_path": "C:\\Users\\VINAY~1.WAI\\AppData\\Local\\Temp\\tmpsjbmkhx8\\doc-001_filled.pdf"
+}
