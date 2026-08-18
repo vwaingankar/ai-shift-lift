@@ -1,3 +1,17 @@
+"""
+Phase 3 - Deterministic fill via PyMuPDF.
+
+Takes:
+1. The clean, target-schema JSON from Phase 2
+2. The pre-measured coordinate map for this template (template_coords.py)
+
+...and writes each value directly onto the blank template at its exact
+position. No AI/LLM involvement anywhere in this step - this is what
+protects the static/legal text on the template from ever being altered.
+
+Output: a filled PDF, saved to disk.
+"""
+
 import pymupdf
 
 from five_template_cordinates import TEMPLATE_FIELD_COORDS
@@ -37,11 +51,12 @@ def fill_template(mapped_json: dict, template_path: str, output_path: str) -> st
             coords = TEMPLATE_FIELD_COORDS[field_name]
             x = coords["x"]
             y = coords["bottom"]  # confirmed correct baseline reference
+            fontsize = coords.get("fontsize", DEFAULT_FONTSIZE)  # per-field override, falls back to default
 
             page.insert_text(
                 (x, y),
                 str(value),
-                fontsize=DEFAULT_FONTSIZE,
+                fontsize=fontsize,
                 color=DEFAULT_COLOR,
             )
             written_fields.append((field_name, value))
@@ -76,6 +91,6 @@ if __name__ == "__main__":
 
     fill_template(
         mapped_json=sample_mapped_json,
-        template_path="D:/Initiatives/AI-Initiatives/AI_shift_lift/Document/Magma_Output.pdf",
-        output_path="D:/Initiatives/AI-Initiatives/AI_shift_lift/pdf_outputs/Magma_Output_FILLED.pdf",
+        template_path="/mnt/user-data/uploads/Magma_Output.pdf",
+        output_path="/home/claude/Magma_Output_FILLED.pdf",
     )
