@@ -16,13 +16,8 @@ Read the letter text below and extract the following fields. If a field is not p
 
 Fields to extract:
 - customer_name: the recipient's full name
-- customer_address: the recipient's full mailing address, as one string
 - proposal_number: the proposal / reference number (e.g. "PROP/2026/98765")
-- policy_name: the name of the insurance policy/product
-- plan: the specific plan or coverage variant (e.g. "1A + 2C")
 - premium_amount: the premium amount, digits only, no currency symbol or commas
-- letter_date: the date on the letter, in DD-MM-YYYY format
-- modification_reason: the reason given for any change/modification, if stated
 
 Return ONLY a valid JSON object with exactly these keys. No explanation, no markdown, no extra text.
 

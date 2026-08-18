@@ -25,12 +25,8 @@ PHASE2_MODEL = "openai/gpt-oss-20b"
 # Update this once you've measured the real placeholder fields on Magma_Output.pdf.
 TARGET_SCHEMA = {
     "name": "Customer's full name",
-    "address": "Customer's full mailing address",
     "proposal_number": "Proposal/reference number",
-    "policy_plan": "Policy name and plan/variant combined",
     "premium_value": "Premium amount, digits only, no currency symbol or commas",
-    "date": "Letter date, DD-MM-YYYY",
-    "modification_note": "Reason for any coverage modification, if any"
 }
 
 MAPPING_PROMPT = """You are reconciling JSON field names to match a target schema.

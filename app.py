@@ -47,7 +47,7 @@ with st.sidebar:
 col1, col2 = st.columns(2)
 with col1:
     input_file = st.file_uploader(
-        "Old filled letter (source PDF)", type=["pdf"], key="input_pdf"
+        "Old filled letter template (source PDF)", type=["pdf"], key="input_pdf"
     )
 with col2:
     template_file = st.file_uploader(
@@ -69,7 +69,7 @@ if run_clicked:
         input_path.write_bytes(input_file.getvalue())
         template_path.write_bytes(template_file.getvalue())
 
-        with st.spinner("Running pipeline - this calls Groq twice (Phase 1, Phase 2)..."):
+        with st.spinner("Running pipeline..."):
             result = run_pipeline(
                 input_pdf_path=str(input_path),
                 template_pdf_path=str(template_path),
@@ -88,51 +88,24 @@ if run_clicked:
             st.stop()
 
         # -----------------------------------------------------------------
-        # Success - show every phase's output
+        # Success - show final PDF only
         # -----------------------------------------------------------------
         st.success("Pipeline completed.")
 
-        if result["confidence"] == "low":
-            st.warning(
-                "⚠️ LOW CONFIDENCE - this result has been flagged for human review. "
-                "Do not auto-approve."
-            )
-            for issue in result["issues"]:
-                st.markdown(f"- {issue}")
-        else:
-            st.info("✅ High confidence - no issues detected.")
+        filled_pdf_bytes = Path(result["output_pdf_path"]).read_bytes()
 
-        tab1, tab2, tab3, tab4 = st.tabs(
-            ["Step 2: Raw text", "Phase 1: Extraction", "Phase 2: Mapped schema", "Final PDF"]
+        st.download_button(
+            "Download filled PDF",
+            data=filled_pdf_bytes,
+            file_name=f"{document_id}_filled.pdf",
+            mime="application/pdf",
         )
 
-        with tab1:
-            st.caption(f"Extraction method used: **{result['extraction_method']}**")
-            st.text_area("Raw text", result["raw_text"], height=400)
-
-        with tab2:
-            st.json(result["phase1_json"])
-
-        with tab3:
-            st.json(result["phase2_json"])
-            if result["missing_schema_keys"]:
-                st.warning(f"Missing target schema keys: {result['missing_schema_keys']}")
-
-        with tab4:
-            filled_pdf_bytes = Path(result["output_pdf_path"]).read_bytes()
-
-            st.download_button(
-                "Download filled PDF",
-                data=filled_pdf_bytes,
-                file_name=f"{document_id}_filled.pdf",
-                mime="application/pdf",
-            )
-
-            # Render first page as an image for a quick visual check
-            # without leaving the browser.
-            doc = pymupdf.open(result["output_pdf_path"])
-            pix = doc[0].get_pixmap(dpi=120)
-            preview_path = str(tmp_dir / "preview.png")
-            pix.save(preview_path)
-            st.image(preview_path, caption="Filled template preview", use_container_width=True)
-            doc.close()
+        # Render first page as an image for a quick visual check
+        # without leaving the browser.
+        doc = pymupdf.open(result["output_pdf_path"])
+        pix = doc[0].get_pixmap(dpi=120)
+        preview_path = str(tmp_dir / "preview.png")
+        pix.save(preview_path)
+        st.image(preview_path, caption="Filled template preview", use_container_width=True)
+        doc.close()
