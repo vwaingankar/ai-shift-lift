@@ -1,18 +1,17 @@
 {
   "document_id": "doc-001",
-  "timestamp": "2026-08-27T10:15:58.642176",
+  "timestamp": "2026-08-27T11:00:13.325770",
   "raw_text_char_count": 2181,
-  "phase1_output": {
-    "customer_name": "Mr. Ranjeet Sharma",
-    "proposal_number": "PROP/2026/98765",
-    "premium_amount": "25499"
-  },
-  "phase2_output": {
+  "extracted_output": {
     "name": "Mr. Ranjeet Sharma",
+    "address": "123, Green Park Extension, Sector 15, Gurugram, Haryana - 122001",
     "proposal_number": "PROP/2026/98765",
-    "premium_value": "25499"
+    "policy_plan": "OneHealth Premium Plus with Enhanced Coverage (Plan 1A + 2C)",
+    "premium_value": "25499",
+    "date": "31-03-2026",
+    "modification_note": "Higher deductible, considering elevated diastolic values"
   },
   "confidence": "high",
   "issues": [],
-  "output_pdf_path": "C:\\Users\\VINAY~1.WAI\\AppData\\Local\\Temp\\tmpp5lqk4wd\\doc-001_filled.pdf"
+  "output_pdf_path": "C:\\Users\\VINAY~1.WAI\\AppData\\Local\\Temp\\tmpk9cf6emq\\doc-001_filled.pdf"
 }

@@ -1,21 +1,21 @@
 """
 run_pipeline_script.py
 
-Same pipeline logic as run_pipeline.py (Step 2 -> Phase 1 -> Phase 2 ->
-confidence check -> Phase 3), refactored into a single callable function
-that accepts file paths as arguments instead of hardcoded constants.
+Same pipeline logic as run_pipeline.py (Step 2 -> Phase 1 (structured
+extraction, schema-ready) -> confidence check -> Phase 3), refactored
+into a single callable function that accepts file paths as arguments
+instead of hardcoded constants.
 
-This is what app.py (the Streamlit frontend) imports and calls per
-uploaded document. Kept separate from run_pipeline.py so the original
-command-line script still works standalone/unchanged.
+Note: the schema-mapping stage has been removed. The structured
+extraction script now outputs JSON that already matches the target
+schema directly, so its output is passed straight to the fill step.
 """
 
 import json
 import traceback
 
 from two_extract_text import extract_raw_text
-from three_phase1_extract import run_phase1_extraction
-from four_phase2_mapping import run_phase2_mapping, TARGET_SCHEMA
+from three_phase1_extract import run_phase1_extraction, TARGET_SCHEMA
 from six_to_templete import fill_template
 from log_check import get_document_logger, check_confidence, record_result
 
@@ -27,17 +27,15 @@ def run_pipeline(
     document_id: str,
 ) -> dict:
     """
-    Runs the full pipeline for one document and returns a result dict
-    that the Streamlit frontend can render directly:
+    Runs the full pipeline for one document and returns a result dict:
 
         {
             "status": "success" | "failed",
-            "failed_at": None | "step2" | "phase1" | "phase2" | "phase3",
+            "failed_at": None | "step2" | "phase1" | "phase3",
             "error_message": None | str,
             "raw_text": str | None,
             "extraction_method": str | None,
-            "phase1_json": dict | None,
-            "phase2_json": dict | None,
+            "extracted_json": dict | None,
             "missing_schema_keys": list,
             "confidence": "high" | "low" | None,
             "issues": list,
@@ -53,8 +51,7 @@ def run_pipeline(
         "error_message": None,
         "raw_text": None,
         "extraction_method": None,
-        "phase1_json": None,
-        "phase2_json": None,
+        "extracted_json": None,
         "missing_schema_keys": [],
         "confidence": None,
         "issues": [],
@@ -73,12 +70,12 @@ def run_pipeline(
         result["error_message"] = str(e)
         return result
 
-    # --- Phase 1 ---
+    # --- Phase 1 (now schema-ready directly) ---
     try:
         phase1_raw = run_phase1_extraction(raw_text)
-        phase1_json = json.loads(phase1_raw)
-        logger.info(f"Phase 1 OK - output: {json.dumps(phase1_json)}")
-        result["phase1_json"] = phase1_json
+        extracted_json = json.loads(phase1_raw)
+        logger.info(f"Phase 1 OK - output: {json.dumps(extracted_json)}")
+        result["extracted_json"] = extracted_json
     except json.JSONDecodeError as e:
         logger.error(f"Phase 1 FAILED - invalid JSON: {e}. Raw output: {phase1_raw!r}")
         result["failed_at"] = "phase1"
@@ -90,30 +87,13 @@ def run_pipeline(
         result["error_message"] = str(e)
         return result
 
-    # --- Phase 2 ---
-    try:
-        phase2_raw = run_phase2_mapping(phase1_json)
-        phase2_json = json.loads(phase2_raw)
-        logger.info(f"Phase 2 OK - output: {json.dumps(phase2_json)}")
-        result["phase2_json"] = phase2_json
-    except json.JSONDecodeError as e:
-        logger.error(f"Phase 2 FAILED - invalid JSON: {e}. Raw output: {phase2_raw!r}")
-        result["failed_at"] = "phase2"
-        result["error_message"] = f"Model did not return valid JSON: {e}"
-        return result
-    except Exception as e:
-        logger.error(f"Phase 2 FAILED: {e}\n{traceback.format_exc()}")
-        result["failed_at"] = "phase2"
-        result["error_message"] = str(e)
-        return result
-
-    missing_keys = list(set(TARGET_SCHEMA.keys()) - set(phase2_json.keys()))
+    missing_keys = list(set(TARGET_SCHEMA.keys()) - set(extracted_json.keys()))
     result["missing_schema_keys"] = missing_keys
     if missing_keys:
-        logger.warning(f"Phase 2 output missing target schema keys: {missing_keys}")
+        logger.warning(f"Output missing target schema keys: {missing_keys}")
 
-    # --- Confidence check ---
-    confidence_result = check_confidence(phase1_json, phase2_json)
+    # --- Confidence check (single-JSON version) ---
+    confidence_result = check_confidence(extracted_json)
     result["confidence"] = confidence_result["confidence"]
     result["issues"] = confidence_result["issues"]
     if confidence_result["confidence"] == "low":
@@ -124,7 +104,7 @@ def run_pipeline(
     # --- Phase 3 ---
     try:
         output_path = fill_template(
-            mapped_json=phase2_json,
+            mapped_json=extracted_json,
             template_path=template_pdf_path,
             output_path=output_pdf_path,
         )
@@ -137,12 +117,10 @@ def run_pipeline(
         result["error_message"] = str(e)
         return result
 
-    # --- Record result (audit trail + review queue routing) ---
     record_result(
         document_id=document_id,
         raw_text=raw_text,
-        phase1_json=phase1_json,
-        phase2_json=phase2_json,
+        extracted_json=extracted_json,
         confidence_result=confidence_result,
         output_pdf_path=result["output_pdf_path"],
     )
